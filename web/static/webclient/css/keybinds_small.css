@@ -1,0 +1,44 @@
+/* keybind button layout */
+/* this is designed for the inner numpad display - change the grid values as needed for fewer */
+#keybinds {
+	display: grid;
+	min-height: 200px;
+	max-height: 20vw;
+	padding: 1em;
+}
+#keybind_1 {
+	grid-column: 1;
+	grid-row: 3;
+}
+#keybind_2 {
+	grid-column: 2;
+	grid-row: 3;
+}
+#keybind_3 {
+	grid-column: 3;
+	grid-row: 3;
+}
+#keybind_4 {
+	grid-column: 1;
+	grid-row: 2;
+}
+#keybind_5 {
+	grid-column: 2;
+	grid-row: 2;
+}
+#keybind_6 {
+	grid-column: 3;
+	grid-row: 2;
+}
+#keybind_7 {
+	grid-column: 1;
+	grid-row: 1;
+}
+#keybind_8 {
+	grid-column: 2;
+	grid-row: 1;
+}
+#keybind_9 {
+	grid-column: 3;
+	grid-row: 1;
+}

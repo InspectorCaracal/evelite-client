@@ -1,0 +1,179 @@
+/* default values start with dark theme */
+:root {
+	/* background property for the full page; not just color */
+	--page-bg: #000;
+	/* set the font for the whole page */
+	--font-family: 'Consolas', monospace;
+	/* color for echoed inputs */
+	--cmd-text: #00ff00;
+	/* page text color - default value here is to match expected ANSI-low-white client defaults */
+	--text-color: #c0c0c0;
+	/* defines the background for the log panes; also not just color */
+	--log-bg: #000;
+	/* colors for the input box */
+	--input-text: #fff;
+	--input-bg: #333;
+	/* colors for highlighted elements */
+	--hilight-text: #0f0;
+	--hilight-bg: #444;
+	/* other useful colors */
+	--error-color: #900;
+	--link-color: #482;
+	--visited-color: #261;
+	--hover-color: #482;
+
+	--border-color: var(--text-color);
+	--system-text: var(--error-color);
+}
+[data-theme="light"] {
+}
+
+[data-theme="dark"] {
+}
+
+
+/* page layout */
+body {
+	margin: 0;
+	display: flex;
+}
+#left {
+  flex: 80vw;
+}
+#right {
+	flex: initial;
+	min-width: 200px;
+	width: 20vw;
+	display: flex;
+	flex-direction: column;
+}
+#map {
+	min-height: 200px;
+	/*! max-height: 50vh; */
+	flex: max-content;
+}
+#prompt {
+	text-align: center;
+	height: 1.2em;
+}
+
+#tab_area {
+	height: 2em;
+}
+#main {
+	height: calc(100vh - 7.5em);
+	padding: 0 1em;
+}
+#input_box {
+	display: block;
+	width: 90%;
+	margin: auto;
+}
+
+#toggles {
+	height: 0;
+	overflow-y: visible;
+}
+#popup_buttons {
+	float: right;
+}
+
+
+/* class styling */
+
+.invisible {
+	display: none !important;
+}
+
+.chan-tab {
+  border: 1px solid;
+  border-radius: 0.5em;
+  padding: .2em 1em;
+  margin: .0 .5em;
+	cursor: pointer;
+}
+.active-tab {
+  background-color: var(--hilight-bg);
+  color: var(--hilight-text);
+}
+
+.clickable {
+	cursor: pointer;
+}
+
+.log {
+	overflow-x: clip;
+	overflow-y: auto;
+	white-space: pre-wrap;
+	height: inherit;
+}
+
+.mxplink {
+	cursor: pointer;
+	text-decoration: none;
+	font-weight: bold;
+	color: inherit;
+}
+
+.system {
+	color: var(--system-text);
+	font-style: italic;
+	padding-left: 1em;
+}
+/* this lets you set the prefix character for all echoed input lines */
+.echo::before {
+	content: "> ";
+}
+.echo {
+	color: var(--cmd-text);
+}
+.keybind_button {
+	border-radius: 0.3em;
+	border: 1px solid var(--border-color);
+	margin: 0.2em;
+	text-align: center;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+/* element styling */
+body {
+	color: var(--text-color);
+	background: var(--page-bg);
+	font-family: var(--font-family);
+}
+
+a {
+	color: var(--link-color);
+}
+a:visited {
+	color: var(--visited-color);
+}
+a:hover {
+	color: var(--hover-color);
+}
+
+#right {
+	border-left: 1px dashed var(--border-color);
+}
+
+#map {
+	padding: 1em;
+	border-bottom: 1px dotted var(--border-color);
+	white-space: pre-wrap;
+}
+
+#input_box {
+	background-color: var(--input-bg);
+	color: var(--input-text);
+	font-size: inherit;
+	font-family: inherit;
+	border: none;
+	border-radius: 0.1em;
+}
+#input_box:focus {
+  outline: 1px solid var(--border-color);
+}
+
+/*** responsive/mobile layout handling will go down here ***/

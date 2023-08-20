@@ -20,7 +20,7 @@
 - It's super lightweight! The entire client is driven by a single *14KB* Javascript file.
 - Clean, straightforward, and easily customizable styling!
 - Thoroughly commented JavaScript to make customizing your webclient's functionality as easy as possible.
-- The up and down arrow key can be used in the input box to scroll through your command history. Even between page reloads!
+- The up and down arrow key can be used in the input box to scroll through your command history. Even across page reloads!
 - Built-in channel tabs in your main game view. Automatically loads any channels you're subscribed to on logging in, with an easy-to-integrate `msg` command to let your game's channel sub/unsub automatically add or remove client tabs.
 - Comes pre-set with a map panel and a custom inputfunc to let your client fetch its own map updates. No more worries about keeping the webclient updated without spamming your telnet players!
 - Supports custom keybindings with on-screen buttons, so you can map any commands you want to the numpad. By default, it's set up just for the 1-9 buttons, but it can easily be extended to the full keypad.
@@ -65,12 +65,12 @@ With this method, when the webclient gets a message of the right type - even tho
 
 While the client does automatically load in any connected channels as soon as your account connects, it can't know that your account has subbed or unsubbed to any channels on the server - unless you tell it. Fortunately, that's easy!
 
-EveLite recognizes a custom out-of-band `msg` command of `chan_info`, which it can then parse to tell if it needs to add, update, or remove a channel tab. The syntax for sending this message is:
+EveLite recognizes a custom out-of-band `msg` command of `chaninfo`, which it can then parse to tell if it needs to add, update, or remove a channel tab. The syntax for sending this message is:
 ```python
-session.msg( chan_info=(channel_id, channel_name, subbed_status) )
+session.msg( chaninfo=(channel_id, channel_name, subbed_status) )
 ```
 
-For example, you could add a line at the end of `Channel.post_join_channel`, saying `joiner.msg( chan_info=(self.id, self.key, True) )` and as soon as the webclient receives that notification, it will set up the tab for that channel. If the third value is `False`, it'll remove the tab instead.
+For example, you could add a line at the end of `Channel.post_join_channel`, saying `joiner.msg( chaninfo=(self.id, self.key, True) )` and as soon as the webclient receives that notification, it will set up the tab for that channel. If the third value is `False`, it'll remove the tab instead.
 
 ### Keybindings
 

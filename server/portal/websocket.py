@@ -86,6 +86,16 @@ class WebSocketClient(BaseWSClient):
         # send to client on required form [cmdname, args, kwargs]
         self.sendLine(json.dumps(["chaninfo", arglist, kwargs]))
 
+    def send_map(self, *args, **kwargs):
+        """
+        Parses the args for the `map` protocol command to convert style flags to
+        HTML before sending through the wire.
+        """
+        args = [parse_html(arg) for arg in args]
+
+        # send to client on required form [cmdname, args, kwargs]
+        self.sendLine(json.dumps(["map", args, kwargs]))
+
     def data_in(self, **kwargs):
         if kwargs.get("ping"):
             # this is just a keepalive for the protocol...

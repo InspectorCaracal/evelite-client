@@ -20,7 +20,7 @@ class ModdedHTMLParser(TextToHTMLparser):
 
         """
         cmd, text = [grp.replace('"', "\\&quot;") for grp in match.groups()]
-        val = r'<span class="mxplink" data-command="{cmd}">{text}</span>'
+        val = rf'<span class="mxplink" data-command="{cmd}">{text}</span>'
         return val
 
 

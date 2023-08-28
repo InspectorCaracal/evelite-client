@@ -43,7 +43,10 @@ function LogTo(el, msg, cls) {
 		MakeClickables(el.lastChild);
 		// scroll the element down to the bottom so the new line is visible
 		el.scrollTop = el.scrollHeight;
-		// TODO: add the `msg` line to the exportable log data
+		// you can do any extra processing to the msg here that you want for the log, such as adding a timestamp
+		// here, we just add a break tag
+		if (localStorage[document.title + el.id])	localStorage[document.title + el.id] += "<br/>" + msg;
+		else localStorage[document.title + el.id] = msg;
 	}
 }
 
@@ -51,6 +54,25 @@ function LogTo(el, msg, cls) {
 function LogClear(el) {
 	el.innerHTML = "";
 }
+
+function LogDownload(el) {
+	var log_el = el.parentNode;
+	var data = localStorage[document.title + log_el.id];
+	// we set it by default to be text/html because the logged items have all the html tags
+	var textAsBlob = new Blob([data], {type: "text/html"});
+	var blobAsURL = window.URL.createObjectURL(textAsBlob);
+
+	var downloadLink = document.createElement("a");
+	downloadLink.download = document.title + log_el.id + ".html";
+	downloadLink.innerHTML = "Download Log";
+	downloadLink.href = blobAsURL;
+	downloadLink.onclick = function (event) { document.body.removeChild(event.target); }
+	downloadLink.style.display = "none";
+	document.body.appendChild(downloadLink);
+ 
+	downloadLink.click();
+}
+
 // wrapper function for setting the innerHTML of an element
 function SetHTML(id, content) {
 	el = document.getElementById(id);
@@ -106,6 +128,8 @@ function AddChannel(channid, channame) {
 		new_log.id = channid + "_log";
 		new_log.classList.add("invisible");
 		new_log.classList.add("log");
+		// TODO: make this less hardcoded
+		new_log.innerHTML = '<div class="dl-button" onclick="LogDownload(this)" alt="Download this log" title="Download this log">📥</div>';
 		// how do i add the "log" role from here
 		document.getElementById('main').append(new_log);
 	}
@@ -311,7 +335,7 @@ socket.onmessage = function (e) {
 					EchoMsg(message);
 					break;
 				// the following cases happen AS WELL AS the normal message display
-				// so there is no `break` and multiple can be triggered by one message
+				// so there is no `break` and multiple can theoretically be triggered by one message
 				case 'traversal':
 					SendFunc('get_map', '', {});
 				// this one is just here to demonstrate having multiple, i didn't create a `get_status` inputfunc

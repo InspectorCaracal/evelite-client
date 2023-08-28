@@ -106,6 +106,14 @@ body {
 	overflow-y: auto;
 	white-space: pre-wrap;
 	height: inherit;
+	position: relative;
+}
+
+.dl-button {
+	cursor: pointer;
+	position: absolute;
+	bottom: 0;
+	right: 0;
 }
 
 .mxplink {

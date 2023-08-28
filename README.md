@@ -22,13 +22,14 @@
 - Thoroughly commented JavaScript to make customizing your webclient's functionality as easy as possible.
 - The up and down arrow key can be used in the input box to scroll through your command history. Even across page reloads!
 - Built-in channel tabs in your main game view. Automatically loads any channels you're subscribed to on logging in, with an easy-to-integrate `msg` command to let your game's channel sub/unsub automatically add or remove client tabs.
+- Export your game and channel logs to a file with the click of a button.
 - Comes pre-set with a map panel and a custom inputfunc to let your client fetch its own map updates. No more worries about keeping the webclient updated without spamming your telnet players!
 - Supports custom keybindings with on-screen buttons, so you can map any commands you want to the numpad. By default, it's set up just for the 1-9 buttons, but it can easily be extended to the full keypad.
 - Did I mention it's only 14KB?
 
 ### Not yet implemented....
 - Mobile view
-- Downloadable log files
+- Ability to clear the browser's log storage
 - Providing the full-keypad alternate bindings code
 - A slightly nicer-looking default UI would be nice
 

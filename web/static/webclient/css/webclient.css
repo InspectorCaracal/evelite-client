@@ -111,9 +111,10 @@ body {
 
 .dl-button {
 	cursor: pointer;
-	position: absolute;
-	bottom: 0;
-	right: 0;
+	position: sticky;
+	top: 0;
+	float: right;
+	margin-right: 0.5rem;
 }
 
 .mxplink {

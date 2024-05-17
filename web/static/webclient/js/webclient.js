@@ -29,6 +29,7 @@ function MakeClickables(el) {
 		if (curr.nodeType != 1) continue;
 		if (curr.classList.contains("mxplink")) {
 			curr.addEventListener("click", mxp_send);
+			curr.title = curr.dataset.command;
     }        
 		MakeClickables(curr);
 	}

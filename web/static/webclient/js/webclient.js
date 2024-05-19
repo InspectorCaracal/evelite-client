@@ -3,7 +3,7 @@ const input_box = document.getElementById("input_box");
 const game_out = document.getElementById("_log");
 // the full suite i think will require a different solution for getting the element, since i don't know if these characters are valid in element IDs
 // const keybind_labels = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', 'Enter', '.', '-', '*', '/' ];
- const keybind_labels = [ '1', '2', '3', '4', '5', '6', '7', '8', '9' ];
+const keybind_labels = [ '1', '2', '3', '4', '5', '6', '7', '8', '9' ];
 
 // websocket info
 const wsstring = wsurl +"?"+ csessid;
@@ -228,7 +228,7 @@ function LogSessionCmd(store_key, message) {
 // function to load commands to numpad bindings
 function UpdateCmdKeys(bindings) {
 	// walk through all of the keys and update
-	for (key in keybind_labels) {
+	for (const key of keybind_labels) {
 		key_el = document.getElementById("keybind_"+key);
 		if (!key_el) continue;
 		if (bindings[key]) {

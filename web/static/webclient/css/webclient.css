@@ -49,7 +49,7 @@ body {
 }
 #map {
 	min-height: 200px;
-	/*! max-height: 50vh; */
+	max-height: 50vh;
 	flex: max-content;
 }
 #prompt {
@@ -59,6 +59,9 @@ body {
 
 #tab_area {
 	height: 2em;
+	z-index: 3;
+	position: relative;
+	background: var(--page-bg);
 }
 #main {
 	height: calc(100vh - 7.5em);
@@ -107,6 +110,8 @@ body {
 	white-space: pre-wrap;
 	height: inherit;
 	position: relative;
+	top: -2em;
+	width: inherit;
 }
 
 .dl-button {

@@ -7,11 +7,14 @@ Subclasses the core Evennia websocket client - check the official docs for more 
 import json
 import html
 from django.conf import settings
-from evennia.utils.utils import class_from_module
-from evennia.utils import logger, ansi
+from evennia.utils import ansi
 
 from .text2html import parse_html
 
+
+_RE_SCREENREADER_REGEX = re.compile(
+    r"%s" % settings.SCREENREADER_REGEX_STRIP, re.DOTALL + re.MULTILINE
+)
 _BASE_SESSION_CLASS = class_from_module(settings.BASE_SESSION_CLASS)
 
 from evennia.server.portal.webclient import WebSocketClient as BaseWSClient

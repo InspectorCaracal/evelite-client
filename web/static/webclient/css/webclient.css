@@ -93,7 +93,7 @@ body {
   border-radius: 0.5em;
   padding: .2em 1em;
   margin: .0 .5em;
-	cursor: pointer;
+  cursor: pointer;
 }
 .active-tab {
   background-color: var(--hilight-bg);
@@ -110,7 +110,6 @@ body {
 	white-space: pre-wrap;
 	height: inherit;
 	position: relative;
-	top: -2em;
 	width: inherit;
 }
 

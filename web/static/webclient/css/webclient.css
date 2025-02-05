@@ -51,7 +51,6 @@ body {
 	min-height: 200px;
 	max-height: 50vh;
 	flex: max-content;
-	white-space: pre-wrap;
 }
 #prompt {
 	text-align: center;

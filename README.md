@@ -4,6 +4,8 @@
 
 *NOTE: This is fully usable, but still a bit unpolished. Check out the Not Yet Implemented section to see what's still missing.*
 
+**Curious what's possible? Check out [the Gallery](https://github.com/InspectorCaracal/evelite-client/wiki/Gallery)!**
+
 ### Try out EveLite if...
 
 - You want a functional and lightweight webclient.

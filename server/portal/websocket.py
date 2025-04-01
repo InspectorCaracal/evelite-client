@@ -6,6 +6,7 @@ Subclasses the core Evennia websocket client - check the official docs for more 
 """
 import json
 import html
+import re
 from django.conf import settings
 from evennia.utils import ansi
 

@@ -8,7 +8,7 @@ import json
 import html
 import re
 from django.conf import settings
-from evennia.utils import ansi
+from evennia.utils import ansi, class_from_module
 
 from .text2html import parse_html
 

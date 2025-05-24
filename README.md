@@ -37,11 +37,21 @@
 
 ## Installation
 
-The project files are laid out in exactly the folder structure and locations that they need to be in a default Evennia gamedir structure. Just download the files, paste them into your game directory, and restart Evennia. 
+#### Quick Start
+
+The project files are laid out in exactly the folder structure and locations that they need to be in a default Evennia gamedir structure. Just download the files, paste them into your game directory, and reboot Evennia. 
+
+#### Detailed Instructions
+
+- Download the repo files [as a zip](https://github.com/InspectorCaracal/evelite-client/archive/refs/heads/main.zip)
+- Extract to a new folder
+- `evennia stop` your game
+- Copy all the files *inside* the extracted .zip folder directly into your game folder
+- `evennia collectstatic` to make sure the old evennia client files are replaced
+- `evennia start`
 
 The default, initial installation into a fresh game should look like this:
 ![Default EveLite interface](https://github.com/user-attachments/assets/8ac3ca82-513f-4443-b4c0-81e7ab59fffd)
-
 
 #### Wait! But I already customized some of those files myself!
 

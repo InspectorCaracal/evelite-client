@@ -37,7 +37,11 @@
 
 ## Installation
 
-The project files are laid out in exactly the folder structure and locations that they need to be in a default Evennia gamedir structure. Just download the files, paste them into your game directory, and restart Evennia. You're all set!
+The project files are laid out in exactly the folder structure and locations that they need to be in a default Evennia gamedir structure. Just download the files, paste them into your game directory, and restart Evennia. 
+
+The default, initial installation into a fresh game should look like this:
+![Default EveLite interface](https://github.com/user-attachments/assets/8ac3ca82-513f-4443-b4c0-81e7ab59fffd)
+
 
 #### Wait! But I already customized some of those files myself!
 

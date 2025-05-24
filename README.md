@@ -46,7 +46,7 @@ The project files are laid out in exactly the folder structure and locations tha
 - Download the repo files [as a zip](https://github.com/InspectorCaracal/evelite-client/archive/refs/heads/main.zip)
 - Extract to a new folder
 - `evennia stop` your game
-- Copy all the files *inside* the extracted .zip folder directly into your game folder
+- Copy everything *inside* the extracted .zip folder directly into your game folder
 - `evennia collectstatic` to make sure the old evennia client files are replaced
 - `evennia start`
 

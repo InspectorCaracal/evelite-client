@@ -21,6 +21,8 @@
 	--link-color: #482;
 	--visited-color: #261;
 	--hover-color: #482;
+	/* dim text for secondary elements */
+	--text-dim: #808080;
 
 	--border-color: var(--text-color);
 	--system-text: var(--error-color);
@@ -35,42 +37,64 @@
 /* page layout */
 body {
 	margin: 0;
-	display: flex;
+	display: grid;
+	grid-auto-columns: calc(100% - 20vw) 20vw;
+	grid-auto-rows: 20vw auto 10rem;
+	height: 100dvh;
+	overflow-y: clip;
 }
 #left {
-  flex: 80vw;
+	height: max-content;
+	grid-column: 1 / 2;
 }
 #right {
-	flex: initial;
+	grid-column: 2 / 3;
 	min-width: 200px;
 	width: 20vw;
 	display: flex;
 	flex-direction: column;
+	height: 100dvh;
 }
 #map {
-	min-height: 200px;
-	max-height: 50vh;
-	flex: max-content;
+	min-height: 40%;
+	max-height: max-content;
+	text-align: center;
+	justify-content: center;
+}
+#map_toggle, #map_button {
+	display: none;
+}
+#map span {
+	margin: auto;
 }
 #prompt {
 	text-align: center;
 	height: 1.2em;
+	margin: 0.5em;
 }
 
 #tab_area {
 	height: 2em;
 	z-index: 3;
 	position: relative;
-	background: var(--page-bg);
+	overflow-x: scroll;
+	white-space: nowrap;
+	scrollbar-width: none;
 }
 #main {
-	height: calc(100vh - 7.5em);
+	height: calc(100dvh - 6em);
 	padding: 0 1em;
 }
 #input_box {
 	display: block;
 	width: 90%;
 	margin: auto;
+	z-index: 2;
+	pointer-events: all;
+}
+#keybinds {
+	grid-column: 2;
+	grid-row: 2;
 }
 
 #toggles {
@@ -89,15 +113,19 @@ body {
 }
 
 .chan-tab {
-  border: 1px solid;
-  border-radius: 0.5em;
-  padding: .2em 1em;
-  margin: .0 .5em;
-  cursor: pointer;
+	border: 1px solid;
+	border-radius: 0.5em;
+	padding: .2em 1em;
+	margin: .0 .5em;
+	cursor: pointer;
+	display: inline-flex;
 }
 .active-tab {
-  background-color: var(--hilight-bg);
-  color: var(--hilight-text);
+	background-color: var(--hilight-bg);
+	color: var(--hilight-text);
+}
+.updated-tab {
+	color: var(--hilight-text);
 }
 
 .clickable {
@@ -146,8 +174,12 @@ body {
 	margin: 0.2em;
 	text-align: center;
 	display: flex;
+	flex-direction: column;
 	justify-content: center;
 	align-items: center;
+}
+.keybind_key {
+	color: var(--text-dim);
 }
 
 /* element styling */
@@ -186,7 +218,70 @@ a:hover {
 	border-radius: 0.1em;
 }
 #input_box:focus {
-  outline: 1px solid var(--border-color);
+	outline: 1px solid var(--border-color);
 }
 
-/*** responsive/mobile layout handling will go down here ***/
+/*** responsive/mobile layout handling ***/
+@media (orientation: portrait) {
+	body {
+		display: block;
+		height: 100dvh;
+		font-size: calc(12px + 1.1vw);
+	}
+	/* minimap */
+	#map {
+		display: none;
+		z-index: 1;
+		position: fixed;
+		background-color: var(--page-bg);
+		top: 2.5rem;
+		width: 100%;
+		margin: auto;
+		border: 1px dotted var(--border-color);
+		border-radius: 0.5rem;
+	}
+	#map_button {
+		display: block;
+		position: absolute;
+		right: 0;
+		top: 8rem;
+		padding: 0.5rem;
+		border-radius: 0.5rem;
+		border: 1px dotted var(--border-color);
+		z-index: 3;
+		background-color: var(--page-bg);
+		cursor: pointer;
+	}
+	#map_toggle:checked + #map {
+		display: block;
+	}
+	/* input box */
+	#input_box {
+		position: absolute;
+		top: unset;
+		bottom: 0.5em;
+		width: calc(100% - 1em);
+		margin-left: 0.5em;
+		margin-right: 0.5em;
+		height: 3em;
+	}
+	/* main window */
+	#main {
+		height: calc(100dvh - 18rem);
+	}
+	/* hotkey buttons */
+	#keybinds {
+		position: absolute;
+		bottom: 5.5rem;
+		width: calc(100dvw - 4em);
+		padding: 0 2em;
+	}
+	.keybind_key {
+		display: none;
+	}
+	.keybind_button {
+		background-color: var(--page-bg);
+		display: inline;
+		padding: 0.5em;
+	}
+}

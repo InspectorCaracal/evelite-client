@@ -13,10 +13,12 @@ timestamp for your base website CSS file and add it here!)
 
 """
 from os.path import getmtime
-from random import choice
+from django.conf import settings
 
 WEBCLIENT_CSS_VERSION = round(getmtime("web/static/webclient/css/webclient.css"))
 WEBCLIENT_JS_VERSION = round(getmtime("web/static/webclient/js/webclient.js"))
+
+SSE_ENABLED = getattr(settings, 'SSE_ENABLED', False)
 
 
 def extra_context(request):
@@ -28,4 +30,5 @@ def extra_context(request):
     return {
         "client_css_version": WEBCLIENT_CSS_VERSION,
         "client_js_version": WEBCLIENT_JS_VERSION,
+        "sse_enabled": SSE_ENABLED,
     }

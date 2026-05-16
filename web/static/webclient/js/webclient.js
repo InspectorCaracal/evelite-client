@@ -5,10 +5,184 @@ const game_out = document.getElementById("_log");
 // const keybind_labels = [ '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '+', 'Enter', '.', '-', '*', '/' ];
 const keybind_labels = [ '1', '2', '3', '4', '5', '6', '7', '8', '9' ];
 
-// websocket info
-const wsstring = wsurl +"?"+ csessid;
-var socket = new WebSocket(wsstring);
-var pingInterval;
+// transport configuration - the server sets 'use_sse' to tell us which transport to use
+// use_sse = true means use Server-Sent Events (SSE), false means use WebSocket
+var connect_retries = 0;   // counts how many times we've tried to reconnect
+var max_retries = 10;      // maximum number of reconnection attempts before giving up
+var stream = null;         // EventSource instance for SSE transport
+var socket = null;         // WebSocket instance for WebSocket transport
+var pingInterval;          // timer for sending keepalive pings (WebSocket only)
+
+
+// sets up a WebSocket connection to the server
+// WebSocket provides a persistent two-way connection
+function initWebSocket() {
+	var wsstring = wsurl + "?" + csessid + "&" + cuid;
+	socket = new WebSocket(wsstring);
+	// attach event handlers for the WebSocket
+	socket.onmessage = handleMessage;
+	socket.onclose = handleDisconnect;
+	socket.onerror = handleWsError;
+	// on successful connection, reset retries and set up a ping to keep the connection alive
+	socket.onopen = function(e) {
+		connect_retries = 0;
+		pingInterval = setInterval(function(){ SendFunc('ping', 'ping', ''); }, 45000);		
+	};
+}
+
+// sets up an SSE (Server-Sent Events) connection to the server
+// SSE uses HTTP requests: the server streams events to us, and we POST responses back
+function initSSE() {
+	// generate a unique page ID so the server can track this browser tab
+	var sse_url = `/webclientdata?${csessid}&${cuid}`;
+	// EventSource is the browser's built-in SSE client
+	stream = new EventSource(sse_url);
+	// attach event handlers for the SSE stream
+	stream.onmessage = handleMessage;
+	// close the stream when the user navigates away from the page
+	stream.onerror = handleSseError;
+	// reset retries on successful connection
+	stream.onopen = function(e) { connect_retries = 0; };
+	// make sure the stream closes cleanly when we leave
+	document.addEventListener("unload", () => stream.close());
+}
+
+// now we check the configured transport protocol via the injected config variables
+// we check SSE first and then WebSocket
+function initTransport() {
+	switch (transport_type) {
+		case 'sse':
+			initSSE();
+			break;
+		case 'ws':
+			initWebSocket();
+			break;
+		default:
+			// this client only supports SSE or Websockets, so we cry about it
+			ServerMsg("No valid connection type. Contact an admin.");
+	}
+}
+
+function handleMessage(e) {
+	msg = JSON.parse(e.data);
+	console.log(msg);
+	// the default structure of the `msg` object is:
+	// [ protocol_cmd, [arg1, arg2], kwargs_obj ]
+	// thus, msg[0] is the cmdname, msg[1] is the args, and msg[2] is the kwargs
+	// the default protocol_cmd of 'text' has the message as the first arg
+	if (msg[0] == 'text') {
+		message = msg[1][0];
+		opts = msg[2];
+		// pass channel messages to the correct channel
+		if (msg[2].from_channel) {
+			ChannelMsg(msg[1], String(msg[2].from_channel));
+		}
+		// this switch case assumes you add 'type' kwargs to your msg function
+		// it would look like this: obj.msg(text=("a message", {'type': 'map'});
+		else {
+			switch(msg[2].type) {
+				// these first cases REPLACE the normal message display
+				case 'map':
+					UpdateMap(message);
+					break;
+				case 'system':
+					ServerMsg(message);
+					break;
+				case 'input':
+					EchoMsg(message);
+					break;
+				// the following cases happen AS WELL AS the normal message display
+				// so there is no `break` and multiple can theoretically be triggered by one message
+				case 'traversal':
+					SendFunc('get_map', '', {});
+				// this one is just here to demonstrate having multiple, i didn't create a `get_status` inputfunc
+				case 'dmg':
+					SendFunc('get_status', '', {});
+				default:
+					GameMsg(message);
+			}
+		}
+	}
+	else if (msg[0] == 'prompt') {
+		UpdateStatus(msg);
+	}
+	else if (msg[0] == 'chaninfo') {
+		var joined = msg[1][2];
+		if (joined)	AddChannel(msg[1][0], msg[1][1]);
+		else RemoveChannel(msg[1][0]);
+	}
+	else if (msg[0] == 'map') {
+		UpdateMap(msg[1][0]);
+	}
+	// load in the extra context numpad buttons
+	else if (msg[0] == 'key_cmds') {
+		// the command mapping is in the msg kwargs
+		UpdateCmdKeys(msg[2]);
+	}
+	// any client functionality we want to trigger when an account logs in
+	// this is received both when logging in via the webclient AND when opening the webclient while already logged in via the website
+	else if (msg[0] == 'logged_in') {
+		// ask the server for the list of channels we're on
+		LoadChannels();
+	}
+}
+
+// called when the WebSocket connection closes
+// we use this to attempt reconnection with exponential backoff
+function handleDisconnect(e) {
+	// only show disconnect messages for WebSocket (SSE uses error handler instead)
+	if (transport_type == 'ws') {
+		// code 1001 means the connection was closed normally (user navigated away)
+		// other codes mean something went wrong
+		if (e.code != 1001) {
+			if (e.reason) ServerMsg("Connection closed: "+e.reason+"\n");
+			else ServerMsg("Connection closed.");
+		}
+		// stop sending ping messages since we're disconnected
+		clearInterval(pingInterval);
+	}
+	
+	// attempt to reconnect with exponential backoff
+	// we wait longer between each retry: 1s, 2s, 3s... up to max_retries
+	connect_retries += 1;
+	if (connect_retries <= max_retries) {
+		// wait connect_retries seconds, then try to connect again
+		setTimeout(initTransport, connect_retries * 1000);
+	} else {
+		ServerMsg("Connection failed.");
+	}
+}
+
+// handles WebSocket errors (connection problems, network issues, etc.)
+// for WebSocket, the actual reconnection is handled by onclose, not onerror
+function handleWsError(e) {
+	ServerMsg("Connection error.");
+	console.log(e);
+}
+
+// handles SSE errors and manages reconnection
+// SSE would normally auto-reconnect aggressively, which can overwhelm the server
+// so we intercept errors and use our own gentler strategy
+function handleSseError(e) {
+	// stop SSE from automatically reconnecting - we'll handle it ourselves
+	e.preventDefault();
+	// close the broken stream
+	stream.close();
+	// increment retry counter and try to reconnect
+	connect_retries += 1;
+	if (connect_retries <= max_retries){
+		// wait connect_retries seconds before trying again (linear backoff)
+		setTimeout(initSSE, connect_retries*1000);
+	}
+	else {
+		// we've tried too many times, give up
+		ServerMsg("Server reconnection failed.");
+		stream = null;
+	}
+}
+
+// initialize connection on page load
+initTransport();
 
 // not currently used
 function toggleTheme(e) {
@@ -116,6 +290,11 @@ function ChannelMsg(message, channid) {
 		chan_elem = document.getElementById(channid + "_log");
 	}
 	LogTo(chan_elem,message,"message");
+	// add visual indicator for new messages on inactive tabs
+	var tab_elem = document.getElementById(channid+"_tab");
+	if (tab_elem && !tab_elem.classList.contains('active-tab')) {
+		tab_elem.classList.add('updated-tab');
+	}
 }
 
 // requests a list of all the account's subscribed channels from the portal
@@ -187,6 +366,7 @@ function swapChannel(e) {
 		curr_tab.classList.remove('active-tab');
 	}
 	this.classList.add('active-tab');
+	this.classList.remove('updated-tab');
 	input_box.dataset.channel = channid;
 	new_log.scrollTop = new_log.scrollHeight;
 }
@@ -234,15 +414,17 @@ function UpdateCmdKeys(bindings) {
 		if (bindings[key]) {
 			// set the command for the key
 			key_el.dataset.command = bindings[key];
-			// set the display text
-			keystr = `( ${key} )`;
-			key_el.innerHTML = bindings[key] + "<br/>" + keystr;
+			// set the display text with styled key indicator
+			keystr = `<span class='keybind_key'>( ${key} )</span>`;
+			key_el.innerHTML = bindings[key] + keystr;
 			key_el.classList.remove("invisible");
 			// add the click event
 			key_el.addEventListener('click', KeybindClickEvent);
 		}
 		else {
 			// hide the button and remove the event
+			key_el.dataset.command = '';
+			key_el.innerHTML = '';
 			key_el.classList.add("invisible");
 			key_el.removeEventListener('click', KeybindClickEvent);
 		}
@@ -267,10 +449,53 @@ function KeybindCmd(el) {
 	return true;
 }
 
-// wrapper function for sending a command back over the websocket to the server
+function SendFuncSSE(data) {
+	// SSE transport: send via HTTP POST request
+	// we create a form with the data and send it to the server's webclientdata endpoint
+	var formdata = new FormData();
+	formdata.append('data', JSON.stringify(data));
+	formdata.append('mode', 'input');
+	formdata.append('sessid', csessid);
+	formdata.append('pgid', cuid);
+		
+	var req = new XMLHttpRequest();
+	req.open('POST', '/webclientdata');
+	req.onload = function() {
+		if (req.status == 200) {
+			var reObj = JSON.parse(req.response);
+			if (typeof(reObj.error) != 'undefined') {
+				ServerMsg(reObj.error);
+			}
+		}
+	};
+	req.onerror = function() {
+		ServerMsg("Server error, message not sent");
+	};
+	req.send(formdata);
+}
+
+function SendFuncWS(data) {
+	if (!socket || socket.readyState !== WebSocket.OPEN) {
+		ServerMsg("Not connected to server.");
+	}	else {
+		socket.send(JSON.stringify(data));
+	}
+}
+
+// wrapper function for sending a command back to the server
+// this routes to either WebSocket or SSE based on server config
 function SendFunc(func, args, kwargs) {
-	data = [func, args, kwargs];
-	socket.send(JSON.stringify(data));
+	var data = [func, args, kwargs];
+	switch (transport_type) {
+		case "sse":
+			SendFuncSSE(data);
+			break;
+		case "ws":
+			SendFuncWS(data);
+			break;
+		default:
+			ServerMsg("No valid connection type. Contact an admin.");
+	}
 }
 
 // function to execute the connected command when clicking on an mxp link
@@ -284,92 +509,6 @@ function mxp_send(e) {
 	}
 	SendFunc('text', command, '');
 }
-
-// initialize the websocket once the connection is established
-socket.onopen = function (e) {
-	// implements a ping/pong between the browser and the server's websocket to prevent timeouts
-	pingInterval = setInterval(function(){ SendFunc('ping', 'ping', ''); }, 45000);
-}
-// handle cleanup and error messaging when the websocket connection closes
-socket.onclose = function (e) {
-	console.log(e.code);
-	if (e.code != 1001) {
-		if (e.reason) ServerMsg("Connection closed: "+e.reason+"\n");
-		else ServerMsg("Connection closed.");
-	}
-	// stops the pings
-	clearInterval(pingInterval)
-};
-// inform of and debug-log errors
-socket.onerror = function (e) {
-	ServerMsg("Connection error.");
-	console.log(e);
-};
-
-// handle all messages coming from the server
-socket.onmessage = function (e) {
-	msg = JSON.parse(e.data);
-	console.log(msg);
-	// the default structure of the `msg` object is:
-	// [ protocol_cmd, [arg1, arg2], kwargs_obj ]
-	// thus, msg[0] is the cmdname, msg[1] is the args, and msg[2] is the kwargs
-	// the default protocol_cmd of 'text' has the message as the first arg
-	if (msg[0] == 'text') {
-		message = msg[1][0];
-		opts = msg[2];
-		// pass channel messages to the correct channel
-		if (msg[2].from_channel) {
-			ChannelMsg(msg[1], String(msg[2].from_channel));
-		}
-		// this switch case assumes you add 'type' kwargs to your msg function
-		// it would look like this: obj.msg(text=("a message", {'type': 'map'});
-		else {
-			switch(msg[2].type) {
-				// these first cases REPLACE the normal message display
-				case 'map':
-					UpdateMap(message);
-					break;
-				case 'system':
-					ServerMsg(message);
-					break;
-				case 'input':
-					EchoMsg(message);
-					break;
-				// the following cases happen AS WELL AS the normal message display
-				// so there is no `break` and multiple can theoretically be triggered by one message
-				case 'traversal':
-					SendFunc('get_map', '', {});
-				// this one is just here to demonstrate having multiple, i didn't create a `get_status` inputfunc
-				case 'dmg':
-					SendFunc('get_status', '', {});
-				default:
-					GameMsg(message);
-			}
-		}
-	}
-	else if (msg[0] == 'prompt') {
-		UpdateStatus(msg);
-	}
-	else if (msg[0] == 'chaninfo') {
-		var joined = msg[1][2];
-		if (joined)	AddChannel(msg[1][0], msg[1][1]);
-		else RemoveChannel(msg[1][0]);
-	}
-	else if (msg[0] == 'map') {
-		UpdateMap(msg[1][0]);
-	}
-	// load in the extra context numpad buttons
-	else if (msg[0] == 'key_cmds') {
-		// the command mapping is in the msg kwargs
-		UpdateCmdKeys(msg[2]);
-	}
-	// any client functionality we want to trigger when an account logs in
-	// this is received both when logging in via the webclient AND when opening the webclient while already logged in via the website
-	else if (msg[0] == 'logged_in') {
-		// ask the server for the list of channels we're on
-		LoadChannels();
-	}
-};
 
 // add clickability to Game tab
 document.getElementById("_tab").addEventListener("click", swapChannel, false);
@@ -391,14 +530,14 @@ input_box.addEventListener("keydown", function(e) {
 			if (channel && channel.dataset.channame) chankey = channel.dataset.channame;
 		}
 
-		if (String(message).length) {
-			// add the entered text to the command cache
-			LogSessionCmd(log_store_key, message);
-			if (chankey.length)	message = chankey + " " + message;
-			SendFunc('text', message, { 'type': 'input' });
-			input_box.value = "";
-			if (input_box.dataset.cmd_index) delete input_box.dataset.cmd_index;
-		}
+		// add the entered text to the command cache (even if empty)
+		LogSessionCmd(log_store_key, message);
+		if (chankey.length && String(message).length) message = chankey + " " + message;
+		
+		SendFunc('text', message, { 'type': 'input' });
+		EchoMsg(message);
+		input_box.value = "";
+		if (input_box.dataset.cmd_index) delete input_box.dataset.cmd_index;
 	}
 	else if (e.key == 'ArrowUp') {
 		// only go back through the history if the cursor is at the beginning

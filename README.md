@@ -19,7 +19,7 @@
 - You don't really want to mess with setting up a webclient at all.
 
 ## Features
-- It's super lightweight! The entire client is driven by a single *14KB* Javascript file.
+- It's super lightweight! The entire client is driven by a single *19KB* Javascript file.
 - Clean, straightforward, and easily customizable styling!
 - Thoroughly commented JavaScript to make customizing your webclient's functionality as easy as possible.
 - The up and down arrow key can be used in the input box to scroll through your command history. Even across page reloads!
@@ -27,10 +27,9 @@
 - Export your game and channel logs to a file with the click of a button.
 - Comes pre-set with a map panel and a custom inputfunc to let your client fetch its own map updates. No more worries about keeping the webclient updated without spamming your telnet players!
 - Supports custom keybindings with on-screen buttons, so you can map any commands you want to the numpad. By default, it's set up just for the 1-9 buttons, but it can easily be extended to the full keypad.
-- Did I mention it's only 14KB?
+- Did I mention it's only 19KB?
 
 ### Not yet implemented....
-- Mobile view
 - Ability to clear the browser's log storage
 - Providing the full-keypad alternate bindings code
 - A slightly nicer-looking default UI would be nice
@@ -105,3 +104,23 @@ chara.msg( key_cmds=('', { '1': 'ROCK', '3': 'PAPER', '5': 'SCISSORS', '7': 'LIZ
 ```
 
 When the client receives a `key_cmds` update, any keys that aren't listed in the mapping is turned off. e.g. With the simple confirmation dialog example, the numpad keys for 3 through 9 will behave as normal numeric keys, and there will be no visible or clickable buttons for them.
+
+## Server-Sent Events
+
+By default, Evennia uses WebSocket for its real-time connection to the server. However, EveLite adds an optional alternative: **Server-Sent Events**. This is a more modern connection type that handles a live stream of events *one way* from the server, accepting regular POSTs to send your own messages.
+
+The SSE pattern is a more robust and mobile-friendly approach, since websockets are notoriously annoying when constantly disconnecting due to your phone swapping towers. It's also widely supported by all modern browsers.
+
+### Switching to SSE
+
+The server-side implementation is already included! To turn on SSE, you just need to uncomment the lines in the provided `server/conf/settings.py`, or add them to your own settings file.
+
+```python
+# in server/conf/settings.py
+SSE_ENABLED = True
+AJAX_CLIENT_CLASS = "server.portal.sse_hybrid.HybridSSEHub"
+```
+
+If you want to be extra clear, you can also add `WEBSOCKET_CLIENT_ENABLED = False` to turn that off completely, but EveLite will prioritize SSE to Websockets if SSE is enabled.
+
+As an important note: **you only get one at a time!** The server itself will still expose both endpoints, but the client will only use *one*.

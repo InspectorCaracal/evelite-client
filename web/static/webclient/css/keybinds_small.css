@@ -2,9 +2,8 @@
 /* this is designed for the inner numpad display - change the grid values as needed for fewer */
 #keybinds {
 	display: grid;
-	min-height: 200px;
-	max-height: 20vw;
-	padding: 1em;
+	grid-auto-columns: 33% 33% 33%;
+	grid-auto-rows: 33% 33% 33%;
 }
 #keybind_1 {
 	grid-column: 1;
